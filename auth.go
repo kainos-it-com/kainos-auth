@@ -64,7 +64,7 @@ type Auth struct {
 	Passkey      *passkey.Manager
 
 	// Internal store reference
-	store store.Store
+	Store store.Store
 }
 
 // Option is a functional option for configuring Auth
@@ -87,7 +87,7 @@ func New(s store.Store, opts ...Option) *Auth {
 
 	auth := &Auth{
 		Config: cfg,
-		store:  s,
+		Store:  s,
 	}
 
 	// Initialize modules
@@ -120,25 +120,25 @@ func (a *Auth) WithOAuthProvider(provider *oauth.Provider) *Auth {
 
 // WithTwoFactor enables two-factor authentication
 func (a *Auth) WithTwoFactor(cfg *twofa.Config) *Auth {
-	a.TwoFactor = twofa.New(a.store, cfg)
+	a.TwoFactor = twofa.New(a.Store, cfg)
 	return a
 }
 
 // WithMagicLink enables magic link authentication
 func (a *Auth) WithMagicLink(cfg *magiclink.Config) *Auth {
-	a.MagicLink = magiclink.New(a.store, cfg)
+	a.MagicLink = magiclink.New(a.Store, cfg)
 	return a
 }
 
 // WithAdmin enables admin functionality
 func (a *Auth) WithAdmin(cfg *admin.Config) *Auth {
-	a.Admin = admin.New(a.store, cfg)
+	a.Admin = admin.New(a.Store, cfg)
 	return a
 }
 
 // WithOrganization enables organization/multi-tenancy
 func (a *Auth) WithOrganization(cfg *organization.Config) *Auth {
-	a.Organization = organization.New(a.store, cfg)
+	a.Organization = organization.New(a.Store, cfg)
 	return a
 }
 
@@ -150,7 +150,7 @@ func (a *Auth) WithRateLimiter(cfg *ratelimit.Config) *Auth {
 
 // WithPasskey enables passkey/WebAuthn authentication
 func (a *Auth) WithPasskey(cfg *passkey.Config) *Auth {
-	a.Passkey = passkey.New(a.store, cfg)
+	a.Passkey = passkey.New(a.Store, cfg)
 	return a
 }
 

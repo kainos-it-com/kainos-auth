@@ -3,7 +3,7 @@ package admin
 import (
 	"context"
 
-	"github.com/kainos.it.com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/store"
 )
 
 // ListUserSessions lists all sessions for a user

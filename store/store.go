@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	db "github.com/kainos.it.com/kainos-auth/db/sqlc"
+	db "github.com/kainos-it-com/kainos-auth/db/sqlc"
 )
 
 type Store interface {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	db "github.com/kainos.it.com/kainos-auth/db/sqlc"
+	db "github.com/kainos-it-com/kainos-auth/db/sqlc"
 )
 
 const (

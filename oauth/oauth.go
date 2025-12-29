@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/kainos.it.com/kainos-auth/core"
-	"github.com/kainos.it.com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/store"
 )
 
 // Provider represents an OAuth provider configuration

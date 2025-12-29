@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kainos.it.com/kainos-auth/core"
-	db "github.com/kainos.it.com/kainos-auth/db/sqlc"
-	"github.com/kainos.it.com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/core"
+	db "github.com/kainos-it-com/kainos-auth/db/sqlc"
+	"github.com/kainos-it-com/kainos-auth/store"
 )
 
 // Verify validates a magic link token and returns/creates the user

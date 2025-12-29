@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/kainos.it.com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/core"
 )
 
 // Manager handles JWT operations

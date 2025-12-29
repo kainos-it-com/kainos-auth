@@ -1,6 +1,6 @@
 package admin
 
-import "github.com/kainos.it.com/kainos-auth/store"
+import "github.com/kainos-it-com/kainos-auth/store"
 
 // Manager handles admin operations
 type Manager struct {

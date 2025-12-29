@@ -24,21 +24,21 @@
 package kainos_auth_lib
 
 import (
-	"github.com/kainos.it.com/kainos-auth/admin"
-	"github.com/kainos.it.com/kainos-auth/core"
-	"github.com/kainos.it.com/kainos-auth/email"
-	"github.com/kainos.it.com/kainos-auth/jwt"
-	"github.com/kainos.it.com/kainos-auth/magiclink"
-	"github.com/kainos.it.com/kainos-auth/oauth"
-	"github.com/kainos.it.com/kainos-auth/organization"
-	"github.com/kainos.it.com/kainos-auth/passkey"
-	"github.com/kainos.it.com/kainos-auth/password"
-	"github.com/kainos.it.com/kainos-auth/ratelimit"
-	"github.com/kainos.it.com/kainos-auth/session"
-	"github.com/kainos.it.com/kainos-auth/store"
-	"github.com/kainos.it.com/kainos-auth/token"
-	"github.com/kainos.it.com/kainos-auth/twofa"
-	"github.com/kainos.it.com/kainos-auth/user"
+	"github.com/kainos-it-com/kainos-auth/admin"
+	"github.com/kainos-it-com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/email"
+	"github.com/kainos-it-com/kainos-auth/jwt"
+	"github.com/kainos-it-com/kainos-auth/magiclink"
+	"github.com/kainos-it-com/kainos-auth/oauth"
+	"github.com/kainos-it-com/kainos-auth/organization"
+	"github.com/kainos-it-com/kainos-auth/passkey"
+	"github.com/kainos-it-com/kainos-auth/password"
+	"github.com/kainos-it-com/kainos-auth/ratelimit"
+	"github.com/kainos-it-com/kainos-auth/session"
+	"github.com/kainos-it-com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/token"
+	"github.com/kainos-it-com/kainos-auth/twofa"
+	"github.com/kainos-it-com/kainos-auth/user"
 )
 
 // Auth is the main authentication instance with modular components

@@ -1,6 +1,6 @@
 package passkey
 
-import "github.com/kainos.it.com/kainos-auth/store"
+import "github.com/kainos-it-com/kainos-auth/store"
 
 // Manager handles passkey/WebAuthn operations
 type Manager struct {

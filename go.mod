@@ -1,4 +1,4 @@
-module github.com/kainos.it.com/kainos-auth
+module github.com/kainos-it-com/kainos-auth
 
 go 1.25.5
 

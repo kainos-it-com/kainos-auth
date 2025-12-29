@@ -3,8 +3,8 @@ package admin
 import (
 	"context"
 
-	"github.com/kainos.it.com/kainos-auth/password"
-	"github.com/kainos.it.com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/password"
+	"github.com/kainos-it-com/kainos-auth/store"
 )
 
 // CreateUser creates a new user as admin

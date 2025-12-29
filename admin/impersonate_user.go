@@ -3,8 +3,8 @@ package admin
 import (
 	"context"
 
-	"github.com/kainos.it.com/kainos-auth/core"
-	"github.com/kainos.it.com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/store"
 )
 
 // ImpersonateUser creates a session as another user

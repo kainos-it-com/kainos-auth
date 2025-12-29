@@ -3,7 +3,7 @@ package passkey
 import (
 	"context"
 
-	"github.com/kainos.it.com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/core"
 )
 
 // FinishAuthentication completes the passkey authentication

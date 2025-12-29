@@ -3,8 +3,8 @@ package email
 import (
 	"context"
 
-	"github.com/kainos.it.com/kainos-auth/core"
-	"github.com/kainos.it.com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/store"
 )
 
 // Manager handles email verification and change operations

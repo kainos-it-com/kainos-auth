@@ -3,10 +3,10 @@ package user
 import (
 	"context"
 
-	"github.com/kainos.it.com/kainos-auth/core"
-	db "github.com/kainos.it.com/kainos-auth/db/sqlc"
-	"github.com/kainos.it.com/kainos-auth/password"
-	"github.com/kainos.it.com/kainos-auth/store"
+	"github.com/kainos-it-com/kainos-auth/core"
+	db "github.com/kainos-it-com/kainos-auth/db/sqlc"
+	"github.com/kainos-it-com/kainos-auth/password"
+	"github.com/kainos-it-com/kainos-auth/store"
 )
 
 // Manager handles user operations

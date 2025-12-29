@@ -3,7 +3,7 @@ package admin
 import (
 	"context"
 
-	"github.com/kainos.it.com/kainos-auth/password"
+	"github.com/kainos-it-com/kainos-auth/password"
 )
 
 // SetUserPassword changes a user's password

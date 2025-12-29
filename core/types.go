@@ -1,7 +1,7 @@
 package core
 
 import (
-	db "github.com/kainos.it.com/kainos-auth/db/sqlc"
+	db "github.com/kainos-it-com/kainos-auth/db/sqlc"
 )
 
 // SignUpInput contains data for user registration

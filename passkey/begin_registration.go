@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kainos.it.com/kainos-auth/core"
-	db "github.com/kainos.it.com/kainos-auth/db/sqlc"
+	"github.com/kainos-it-com/kainos-auth/core"
+	db "github.com/kainos-it-com/kainos-auth/db/sqlc"
 )
 
 // BeginRegistration starts the passkey registration process

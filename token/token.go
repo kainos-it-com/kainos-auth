@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kainos.it.com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/core"
 )
 
 // Manager handles token operations

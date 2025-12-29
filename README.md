@@ -5,6 +5,7 @@ A comprehensive, modular authentication library for Go, inspired by [Better Auth
 ## Features
 
 ### Core Features (Built-in)
+- ✅ **Built-in Authentication Methods** (SignUp, SignIn with automatic password hashing)
 - ✅ Email/Password Authentication
 - ✅ Session Management (create, validate, refresh, revoke)
 - ✅ OAuth Providers (Google, GitHub, Discord, Microsoft, Apple)
@@ -26,7 +27,7 @@ A comprehensive, modular authentication library for Go, inspired by [Better Auth
 ## Installation
 
 ```bash
-go get kainos.it.com/kainos-auth/lib
+go get github.com/kainos-it-com/kainos-auth
 ```
 
 ## Quick Start
@@ -38,8 +39,8 @@ import (
     "context"
     "log"
     
-    auth "kainos.it.com/kainos-auth/lib"
-    "kainos.it.com/kainos-auth/lib/store"
+    auth "github.com/kainos-it-com/kainos-auth"
+    "github.com/kainos-it-com/kainos-auth/store"
 )
 
 func main() {
@@ -68,13 +69,81 @@ func main() {
 }
 ```
 
-## Core Usage
+## Built-in Authentication (New in v1.1.0)
 
-### User Registration
+### Easy Sign Up with Automatic Password Hashing
 
 ```go
-// Create user with password
-result, err := a.store.CreateUserWithCredential(ctx, store.CreateUserInput{
+// Sign up with automatic password validation, hashing, and session creation
+response, err := a.SignUp(ctx, auth.SignUpInput{
+    Name:     "John Doe",
+    Email:    "john@example.com",
+    Password: "securePassword123!",
+})
+if err != nil {
+    // Handle error (validation, duplicate email, etc.)
+    return err
+}
+
+// User and session are ready to use
+userID := response.User.ID
+sessionToken := response.Session.Token
+```
+
+### Easy Sign In with Automatic Password Verification
+
+```go
+// Sign in with automatic password verification and session creation
+response, err := a.SignIn(ctx, auth.SignInInput{
+    Email:    "john@example.com",
+    Password: "securePassword123!",
+})
+if err != nil {
+    // Handle error (invalid credentials, user not found, etc.)
+    return err
+}
+
+// User authenticated and session created
+userID := response.User.ID
+sessionToken := response.Session.Token
+```
+
+### Create User Without Session
+
+```go
+// Create user without automatically creating a session
+userWithAccounts, err := a.CreateUser(ctx, auth.SignUpInput{
+    Name:     "Jane Doe",
+    Email:    "jane@example.com",
+    Password: "anotherSecurePassword123!",
+})
+if err != nil {
+    return err
+}
+
+// User created, create session later when needed
+userID := userWithAccounts.User.ID
+```
+
+## Core Usage (Advanced)
+
+### Direct Store Access (Still Available)
+
+```go
+// Direct store access for advanced use cases
+hashedPassword, err := auth.HashPassword("password123")
+result, err := a.Store.CreateUserWithCredential(ctx, auth.CreateUserInput{
+    Name:  "John Doe",
+    Email: "john@example.com",
+}, hashedPassword)
+```
+
+### User Registration (Manual)
+
+```go
+// Create user with password (manual approach)
+hashedPassword, err := auth.HashPassword("password123")
+result, err := a.Store.CreateUserWithCredential(ctx, auth.CreateUserInput{
     Name:  "John Doe",
     Email: "john@example.com",
 }, hashedPassword)
@@ -87,15 +156,27 @@ verification, err := a.Email.RequestVerification(ctx, "john@example.com")
 err = a.Email.Verify(ctx, "john@example.com", token)
 ```
 
-### Authentication
+### Authentication (Manual)
 
 ```go
-// Validate password and create session
-user, err := a.store.GetUserByEmail(ctx, email)
-if !auth.CheckPassword(password, user.PasswordHash) {
+// Manual authentication approach
+user, err := a.User.GetByEmail(ctx, email)
+if err != nil {
+    return errors.New("user not found")
+}
+
+// Get credential account
+account, err := a.Store.GetCredentialAccount(ctx, user.ID)
+if err != nil || account.Password == nil {
     return errors.New("invalid credentials")
 }
 
+// Verify password
+if !auth.CheckPassword(password, *account.Password) {
+    return errors.New("invalid credentials")
+}
+
+// Create session
 session, err := a.Session.Create(ctx, user.ID, &ipAddress, &userAgent)
 ```
 

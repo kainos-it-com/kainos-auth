@@ -28,6 +28,7 @@ import (
 
 	"github.com/kainos-it-com/kainos-auth/admin"
 	"github.com/kainos-it-com/kainos-auth/core"
+	"github.com/kainos-it-com/kainos-auth/db/sqlc"
 	"github.com/kainos-it-com/kainos-auth/email"
 	"github.com/kainos-it-com/kainos-auth/jwt"
 	"github.com/kainos-it-com/kainos-auth/magiclink"
@@ -71,14 +72,6 @@ type Auth struct {
 
 // Option is a functional option for configuring Auth
 type Option = core.Option
-
-// Re-export option functions for convenience
-var (
-	WithSessionExpiry     = core.WithSessionExpiry
-	WithEmailVerification = core.WithEmailVerification
-	WithSecret            = core.WithSecret
-	WithPasswordPolicy    = core.WithPasswordPolicy
-)
 
 // New creates a new Auth instance with the given store and options
 func New(s store.Store, opts ...Option) *Auth {
@@ -156,117 +149,8 @@ func (a *Auth) WithPasskey(cfg *passkey.Config) *Auth {
 	return a
 }
 
-// Re-export types for convenience
-type (
-	// Config Core types
-	Config         = core.Config
-	SessionConfig  = core.SessionConfig
-	PasswordConfig = core.PasswordConfig
-
-	// SignUpInput Input types
-	SignUpInput         = core.SignUpInput
-	SignInInput         = core.SignInInput
-	AuthResponse        = core.AuthResponse
-	OAuthCallbackInput  = core.OAuthCallbackInput
-	OAuthProfile        = core.OAuthProfile
-	ChangePasswordInput = core.ChangePasswordInput
-	ResetPasswordInput  = core.ResetPasswordInput
-	ChangeEmailInput    = core.ChangeEmailInput
-	UpdateUserInput     = core.UpdateUserInput
-	DeleteUserInput     = core.DeleteUserInput
-
-	// Store types
-	CreateUserInput   = store.CreateUserInput
-	UserWithAccounts  = store.UserWithAccounts
-	UserWithSessions  = store.UserWithSessions
-	PaginatedUsers    = store.PaginatedUsers
-	UserStats         = store.UserStats
-
-	// OAuthProvider OAuth types
-	OAuthProvider      = oauth.Provider
-	OAuthTokenResponse = oauth.TokenResponse
-
-	// JWTConfig JWT types
-	JWTConfig    = jwt.Config
-	JWTClaims    = jwt.Claims
-	JWTTokenPair = jwt.TokenPair
-
-	// TokenClaims Token types
-	TokenClaims = token.Claims
-	TokenPair   = token.Pair
-
-	// TwoFactor types
-	TwoFactorConfig = twofa.Config
-
-	// MagicLink types
-	MagicLinkConfig = magiclink.Config
-
-	// Admin types
-	AdminConfig = admin.Config
-
-	// Organization types
-	OrganizationConfig = organization.Config
-	Organization       = organization.Organization
-	OrgMember          = organization.Member
-	OrgInvitation      = organization.Invitation
-	OrgTeam            = organization.Team
-
-	// RateLimit types
-	RateLimitConfig = ratelimit.Config
-	RateLimitResult = ratelimit.Result
-
-	// Passkey types
-	PasskeyConfig = passkey.Config
-	Passkey       = passkey.Passkey
-)
-
-// Re-export errors for convenience
-var (
-	ErrInvalidCredentials      = core.ErrInvalidCredentials
-	ErrEmailAlreadyExists      = core.ErrEmailAlreadyExists
-	ErrUserNotFound            = core.ErrUserNotFound
-	ErrSessionExpired          = core.ErrSessionExpired
-	ErrSessionNotFound         = core.ErrSessionNotFound
-	ErrInvalidToken            = core.ErrInvalidToken
-	ErrTokenExpired            = core.ErrTokenExpired
-	ErrPasswordTooShort        = core.ErrPasswordTooShort
-	ErrPasswordNoUpper         = core.ErrPasswordNoUpper
-	ErrPasswordNoLower         = core.ErrPasswordNoLower
-	ErrPasswordNoNumber        = core.ErrPasswordNoNumber
-	ErrPasswordNoSpecial       = core.ErrPasswordNoSpecial
-	ErrPasswordMismatch        = core.ErrPasswordMismatch
-	ErrPasswordNotSet          = core.ErrPasswordNotSet
-	ErrOAuthStateMismatch      = core.ErrOAuthStateMismatch
-	ErrOAuthCodeInvalid        = core.ErrOAuthCodeInvalid
-	ErrProviderNotFound        = core.ErrProviderNotFound
-	ErrAccountNotFound         = core.ErrAccountNotFound
-	ErrCannotUnlinkLastAccount = core.ErrCannotUnlinkLastAccount
-	ErrAccountAlreadyLinked    = core.ErrAccountAlreadyLinked
-	ErrVerificationNotFound    = core.ErrVerificationNotFound
-	ErrVerificationExpired     = core.ErrVerificationExpired
-	ErrEmailNotVerified        = core.ErrEmailNotVerified
-	ErrSessionNotFresh         = core.ErrSessionNotFresh
-)
-
-// Re-export OAuth provider constructors
-var (
-	GoogleProvider    = oauth.Google
-	GitHubProvider    = oauth.GitHub
-	DiscordProvider   = oauth.Discord
-	MicrosoftProvider = oauth.Microsoft
-	AppleProvider     = oauth.Apple
-)
-
-// Re-export utility functions
-var (
-	HashPassword        = password.Hash
-	CheckPassword       = password.Check
-	GenerateRandomToken = token.GenerateRandom
-	GenerateOpaqueToken = token.GenerateOpaque
-)
-
 // SignUp creates a new user with email and password
-func (a *Auth) SignUp(ctx context.Context, input SignUpInput) (*AuthResponse, error) {
+func (a *Auth) SignUp(ctx context.Context, input SignUpInput) (*AuthResponseWithTokens, error) {
 	// Validate password
 	if err := a.Password.Validate(input.Password); err != nil {
 		return nil, err
@@ -294,14 +178,37 @@ func (a *Auth) SignUp(ctx context.Context, input SignUpInput) (*AuthResponse, er
 		return nil, err
 	}
 
-	return &AuthResponse{
+	// Generate JWT tokens if JWT manager is configured
+	if a.JWT != nil {
+		tokenPair, err := a.JWT.CreateTokenPair(
+			userWithAccounts.User.ID,
+			session.ID,
+			userWithAccounts.User.Email,
+			userWithAccounts.User.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return &AuthResponseWithTokens{
+			User:         &userWithAccounts.User,
+			Session:      session,
+			AccessToken:  tokenPair.AccessToken,
+			RefreshToken: tokenPair.RefreshToken,
+			TokenType:    tokenPair.TokenType,
+			ExpiresIn:    tokenPair.ExpiresIn,
+		}, nil
+	}
+
+	// Return without tokens if JWT is not configured
+	return &AuthResponseWithTokens{
 		User:    &userWithAccounts.User,
 		Session: session,
 	}, nil
 }
 
 // SignIn authenticates a user with email and password
-func (a *Auth) SignIn(ctx context.Context, input SignInInput) (*AuthResponse, error) {
+func (a *Auth) SignIn(ctx context.Context, input SignInInput) (*AuthResponseWithTokens, error) {
 	// Get user by email
 	user, err := a.User.GetByEmail(ctx, input.Email)
 	if err != nil {
@@ -330,10 +237,140 @@ func (a *Auth) SignIn(ctx context.Context, input SignInInput) (*AuthResponse, er
 		return nil, err
 	}
 
-	return &AuthResponse{
+	// Generate JWT tokens if JWT manager is configured
+	if a.JWT != nil {
+		tokenPair, err := a.JWT.CreateTokenPair(
+			user.ID,
+			session.ID,
+			user.Email,
+			user.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		return &AuthResponseWithTokens{
+			User:         user,
+			Session:      session,
+			AccessToken:  tokenPair.AccessToken,
+			RefreshToken: tokenPair.RefreshToken,
+			TokenType:    tokenPair.TokenType,
+			ExpiresIn:    tokenPair.ExpiresIn,
+		}, nil
+	}
+
+	// Return without tokens if JWT is not configured
+	return &AuthResponseWithTokens{
 		User:    user,
 		Session: session,
 	}, nil
+}
+
+// RefreshToken generates new access and refresh tokens using a valid refresh token
+func (a *Auth) RefreshToken(ctx context.Context, input RefreshTokenInput) (*AuthResponseWithTokens, error) {
+	// Check if JWT manager is configured
+	if a.JWT == nil {
+		return nil, ErrJWTNotConfigured
+	}
+
+	// Verify and extract claims from refresh token
+	claims, err := a.JWT.ValidateRefreshToken(input.RefreshToken)
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+
+	// Get user
+	user, err := a.User.Get(ctx, claims.UserID)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+
+	// Get active sessions for the user to verify session still exists
+	sessions, err := a.Session.List(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find the session
+	var session *sqlc.Session
+	for _, s := range sessions {
+		if s.ID == claims.SessionID {
+			session = &s
+			break
+		}
+	}
+
+	if session == nil {
+		return nil, ErrSessionNotFound
+	}
+
+	// Generate new token pair using RefreshTokenPair
+	tokenPair, err := a.JWT.RefreshTokenPair(input.RefreshToken, user.Email, user.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResponseWithTokens{
+		User:         user,
+		Session:      session,
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+		TokenType:    tokenPair.TokenType,
+		ExpiresIn:    tokenPair.ExpiresIn,
+	}, nil
+}
+
+// Logout invalidates a user's session
+func (a *Auth) Logout(ctx context.Context, sessionID string) error {
+	// Revoke the session by ID
+	return a.Session.RevokeByID(ctx, sessionID)
+}
+
+// LogoutAll invalidates all sessions for a user
+func (a *Auth) LogoutAll(ctx context.Context, userID string) error {
+	// Revoke all sessions for the user
+	return a.Session.RevokeAll(ctx, userID)
+}
+
+// LogoutByToken invalidates a session by its token
+func (a *Auth) LogoutByToken(ctx context.Context, token string) error {
+	// Revoke the session by token
+	return a.Session.Revoke(ctx, token)
+}
+
+// VerifyAccessToken validates an access token and returns the claims
+func (a *Auth) VerifyAccessToken(ctx context.Context, accessToken string) (*jwt.Claims, error) {
+	// Check if JWT manager is configured
+	if a.JWT == nil {
+		return nil, ErrJWTNotConfigured
+	}
+
+	// Verify the access token
+	claims, err := a.JWT.ValidateAccessToken(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Optionally verify the session is still valid
+	sessions, err := a.Session.List(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find the session
+	sessionExists := false
+	for _, s := range sessions {
+		if s.ID == claims.SessionID {
+			sessionExists = true
+			break
+		}
+	}
+
+	if !sessionExists {
+		return nil, ErrSessionNotFound
+	}
+
+	return claims, nil
 }
 
 // CreateUser creates a new user with email and password (without session)
@@ -356,44 +393,3 @@ func (a *Auth) CreateUser(ctx context.Context, input SignUpInput) (*store.UserWi
 		Image: input.Image,
 	}, hashedPassword)
 }
-
-// Re-export plugin default configs
-var (
-	DefaultTwoFactorConfig    = twofa.DefaultConfig
-	DefaultMagicLinkConfig    = magiclink.DefaultConfig
-	DefaultAdminConfig        = admin.DefaultConfig
-	DefaultOrganizationConfig = organization.DefaultConfig
-	DefaultRateLimitConfig    = ratelimit.DefaultConfig
-	DefaultPasskeyConfig      = passkey.DefaultConfig
-)
-
-// Re-export plugin errors
-var (
-	// TwoFactor errors
-	ErrTwoFactorNotEnabled = twofa.ErrTwoFactorNotEnabled
-	ErrTwoFactorRequired   = twofa.ErrTwoFactorRequired
-	ErrInvalidTOTPCode     = twofa.ErrInvalidTOTPCode
-	ErrInvalidBackupCode   = twofa.ErrInvalidBackupCode
-
-	// MagicLink errors
-	ErrMagicLinkInvalid  = magiclink.ErrInvalidToken
-	ErrMagicLinkExpired  = magiclink.ErrTokenExpired
-	ErrSignUpDisabled    = magiclink.ErrSignUpDisabled
-
-	// Admin errors
-	ErrAdminNotAuthorized      = admin.ErrNotAuthorized
-	ErrCannotImpersonateAdmin  = admin.ErrCannotImpersonateAdmin
-
-	// Organization errors
-	ErrOrgCreationDisabled = organization.ErrOrgCreationDisabled
-	ErrOrgLimitReached     = organization.ErrOrgLimitReached
-	ErrSlugTaken           = organization.ErrSlugTaken
-	ErrOwnerCannotLeave    = organization.ErrOwnerCannotLeave
-
-	// RateLimit errors
-	ErrRateLimitExceeded = ratelimit.ErrRateLimitExceeded
-
-	// Passkey errors
-	ErrInvalidChallenge = passkey.ErrInvalidChallenge
-	ErrPasskeyNotFound  = passkey.ErrPasskeyNotFound
-)

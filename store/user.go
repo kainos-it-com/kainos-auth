@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	db "github.com/kainos-it-com/kainos-auth/db/sqlc"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type CreateUserInput struct {
@@ -179,6 +180,13 @@ func (s *SQLStore) GetUserStats(ctx context.Context, userID string) (*UserStats,
 	}, nil
 }
 
+func (s *SQLStore) HashPassword(passwordPlain string, cost int) string {
+	password, err := bcrypt.GenerateFromPassword([]byte(passwordPlain), cost)
+	if err != nil {
+		return ""
+	}
+	return string(password)
+}
 func (s *SQLStore) CreateUserWithCredential(ctx context.Context, input CreateUserInput, passwordHash string) (*UserWithAccounts, error) {
 	var result *UserWithAccounts
 

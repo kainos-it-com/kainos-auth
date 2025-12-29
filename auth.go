@@ -24,6 +24,8 @@
 package kainos_auth_lib
 
 import (
+	"context"
+
 	"github.com/kainos-it-com/kainos-auth/admin"
 	"github.com/kainos-it-com/kainos-auth/core"
 	"github.com/kainos-it-com/kainos-auth/email"
@@ -173,6 +175,13 @@ type (
 	UpdateUserInput     = core.UpdateUserInput
 	DeleteUserInput     = core.DeleteUserInput
 
+	// Store types
+	CreateUserInput   = store.CreateUserInput
+	UserWithAccounts  = store.UserWithAccounts
+	UserWithSessions  = store.UserWithSessions
+	PaginatedUsers    = store.PaginatedUsers
+	UserStats         = store.UserStats
+
 	// OAuthProvider OAuth types
 	OAuthProvider      = oauth.Provider
 	OAuthTokenResponse = oauth.TokenResponse
@@ -255,6 +264,98 @@ var (
 	GenerateRandomToken = token.GenerateRandom
 	GenerateOpaqueToken = token.GenerateOpaque
 )
+
+// SignUp creates a new user with email and password
+func (a *Auth) SignUp(ctx context.Context, input SignUpInput) (*AuthResponse, error) {
+	// Validate password
+	if err := a.Password.Validate(input.Password); err != nil {
+		return nil, err
+	}
+
+	// Hash password
+	hashedPassword, err := HashPassword(input.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create user with credential
+	userWithAccounts, err := a.Store.CreateUserWithCredential(ctx, store.CreateUserInput{
+		Name:  input.Name,
+		Email: input.Email,
+		Image: input.Image,
+	}, hashedPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create session
+	session, err := a.Session.Create(ctx, userWithAccounts.User.ID, input.IPAddress, input.UserAgent)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResponse{
+		User:    &userWithAccounts.User,
+		Session: session,
+	}, nil
+}
+
+// SignIn authenticates a user with email and password
+func (a *Auth) SignIn(ctx context.Context, input SignInInput) (*AuthResponse, error) {
+	// Get user by email
+	user, err := a.User.GetByEmail(ctx, input.Email)
+	if err != nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	// Get credential account
+	account, err := a.Store.GetCredentialAccount(ctx, user.ID)
+	if err != nil {
+		return nil, ErrInvalidCredentials
+	}
+
+	// Check if password is set
+	if account.Password == nil {
+		return nil, ErrPasswordNotSet
+	}
+
+	// Verify password
+	if !CheckPassword(input.Password, *account.Password) {
+		return nil, ErrInvalidCredentials
+	}
+
+	// Create session
+	session, err := a.Session.Create(ctx, user.ID, input.IPAddress, input.UserAgent)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResponse{
+		User:    user,
+		Session: session,
+	}, nil
+}
+
+// CreateUser creates a new user with email and password (without session)
+func (a *Auth) CreateUser(ctx context.Context, input SignUpInput) (*store.UserWithAccounts, error) {
+	// Validate password
+	if err := a.Password.Validate(input.Password); err != nil {
+		return nil, err
+	}
+
+	// Hash password
+	hashedPassword, err := HashPassword(input.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create user with credential
+	return a.Store.CreateUserWithCredential(ctx, store.CreateUserInput{
+		Name:  input.Name,
+		Email: input.Email,
+		Image: input.Image,
+	}, hashedPassword)
+}
 
 // Re-export plugin default configs
 var (

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	auth "github.com/kainos-it-com/kainos-auth"
+	"github.com/kainos-it-com/kainos-auth"
 	"github.com/kainos-it-com/kainos-auth/store"
 )
 
@@ -20,13 +20,13 @@ func main() {
 	defer s.Close()
 
 	// Create auth instance
-	a := auth.New(s,
-		auth.WithSecret("your-secret-key"),
-		auth.WithEmailVerification(true),
+	a := kainos_auth_lib.New(s,
+		kainos_auth_lib.WithSecret("your-secret-key"),
+		kainos_auth_lib.WithEmailVerification(true),
 	)
 
 	// Example 1: Sign up a new user (with automatic password hashing and session creation)
-	signUpResponse, err := a.SignUp(ctx, auth.SignUpInput{
+	signUpResponse, err := a.SignUp(ctx, kainos_auth_lib.SignUpInput{
 		Name:     "John Doe",
 		Email:    "john@example.com",
 		Password: "securePassword123!",
@@ -38,7 +38,7 @@ func main() {
 	fmt.Printf("User created: %s, Session: %s\n", signUpResponse.User.ID, signUpResponse.Session.ID)
 
 	// Example 2: Sign in an existing user (with automatic password verification and session creation)
-	signInResponse, err := a.SignIn(ctx, auth.SignInInput{
+	signInResponse, err := a.SignIn(ctx, kainos_auth_lib.SignInInput{
 		Email:    "john@example.com",
 		Password: "securePassword123!",
 	})
@@ -49,7 +49,7 @@ func main() {
 	fmt.Printf("User signed in: %s, Session: %s\n", signInResponse.User.ID, signInResponse.Session.ID)
 
 	// Example 3: Create user without session (just user creation)
-	userWithAccounts, err := a.CreateUser(ctx, auth.SignUpInput{
+	userWithAccounts, err := a.CreateUser(ctx, kainos_auth_lib.SignUpInput{
 		Name:     "Jane Doe",
 		Email:    "jane@example.com",
 		Password: "anotherSecurePassword123!",
@@ -61,13 +61,13 @@ func main() {
 	fmt.Printf("User created without session: %s\n", userWithAccounts.User.ID)
 
 	// Example 4: Direct store access (your original approach still works)
-	hashedPassword, err := auth.HashPassword("directPassword123!")
+	hashedPassword, err := kainos_auth_lib.HashPassword("directPassword123!")
 	if err != nil {
 		log.Printf("Password hashing failed: %v", err)
 		return
 	}
 
-	result, err := a.Store.CreateUserWithCredential(ctx, auth.CreateUserInput{
+	result, err := a.Store.CreateUserWithCredential(ctx, kainos_auth_lib.CreateUserInput{
 		Name:  "Direct User",
 		Email: "direct@example.com",
 	}, hashedPassword)

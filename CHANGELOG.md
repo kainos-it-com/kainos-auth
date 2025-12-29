@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2024-12-29
+
+### Fixed
+- **Package Conflict Resolution**: Fixed "Found several packages [main, kainos_auth_lib]" error
+- **Example Structure**: Moved `example_usage.go` to `examples/` directory with separate `go.mod`
+- **Build Issues**: Resolved package name conflicts in root directory
+- **Module Structure**: Examples now build correctly as separate module with proper imports
+
+### Technical Details
+- Created `examples/go.mod` with replace directive for local development
+- Updated example imports to use correct package name
+- Maintained all functionality while fixing package structure
+
 ## [1.1.0] - 2024-12-29
 
 ### Added
